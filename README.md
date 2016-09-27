@@ -27,6 +27,7 @@ without it.
 
 ## Usage
 
+- Unzip the module files (downloadable here through the green button) into site/modules
 - Install FieldtypeDatetimeAdvanced
 - Create a field with type DatetimeAdvanced and add it to your template
 - Populate the field with values in some pages
