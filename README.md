@@ -35,18 +35,33 @@ without it.
 
 ## Examples
 
+Simple selector by year:
 ```
 $pagelist = $pages->find("mydatefield.year=2016");
 ```
 
+Simple selector by month:
 ```
 $maypages = $pagelist->filter("mydatefield.month=5");
 ```
 
+All pages with a date in the next 7 days:
 ```
 $start = date('z');
 $end = $start + 7;
 $sevendays = $pages->find("mydatefield.day_of_year>=$start, mydatefield.day_of_year<$end");
+```
+
+Directly accessing a date subfield:
+```
+$blogentry = $pages->get('blog-entry-1');
+echo $blogentry->title . "(" . $blogentry->publishdate->year . ")";
+```
+
+strftime() and date() shorthand:
+```
+echo $blogentry->publishdate->strftime("%Y-%m-%d %H:%M:%S") . PHP_EOL;
+echo $blogentry->publishdate->date("Y-m-d H:i:s") . PHP_EOL;
 ```
 
 ## A little bit of prose
