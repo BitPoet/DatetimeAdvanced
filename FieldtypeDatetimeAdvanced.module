@@ -1,0 +1,166 @@
+<?php
+
+/**
+ * ## Advanced Datetime Field
+ *
+ * Allows searching for individual components of datetime fields in
+ * standard subfield syntax.
+ *
+ * ## Possible subfields
+ *
+ * - day
+ * - month
+ * - year (4-digit)
+ * - hour (0..23)
+ * - minutes
+ * - seconds
+ * - day_of_week (0..6, 0 = Sunday)
+ * - day_of_year (0..365)
+ * - week_of_year (1..53)
+ *
+ * ## Also installs
+ * WireDT: wrapper class for datetime fields, necessary to support
+ * subfield syntax when filtering PageArrays.
+ *
+ * ## Examples
+ *
+ * ```
+ * $pagelist = $pages->find("mydatefield.year=2016");
+ * ```
+ *
+ * ```
+ * $maypages = $pagelist->filter("mydatefield.month=5");
+ * ```
+ *
+ * ```
+ * $start = date('z');
+ * $end = $start + 7;
+ * $sevendays = $pages->find("mydatefield.day_of_year>=$start, mydatefield.day_of_year<$end");
+ * ```
+ **/
+
+class FieldtypeDatetimeAdvanced extends FieldtypeDatetime implements Module {
+	public static function getModuleInfo() {
+		return array(
+			"title"			=>	"Advanced Datetime field",
+			"summary"		=>	"Datetime field with extended search syntax",
+			"version"		=>	"0.0.3",
+			"installs"		=>	array("WireDT")
+		);
+	}
+
+	// Operators/Format strings, key is the name to us in selectors,
+	// first value is for MySQL, second for PHP's date function
+	protected static $_operators = array(
+		"day"			=>	array("d", "d"),
+		"month"			=>	array("c", "m"),
+		"year"			=>	array("Y", "Y"),
+		"hour"			=>	array("H", "H"),
+		"minutes"		=>	array("i", "i"),
+		"seconds"		=>	array("s", "s"),
+		"day_of_week"	=>	array("w", "w"),
+		"day_of_year"	=>	array("j", "z"),
+		"week_of_year"	=>	array("v", "W")
+	);
+
+	/**
+	 * Match a date/time value in the database, as used by PageFinder
+	 *
+	 */
+	public function getMatchQuery($query, $table, $subfield, $operator, $value) {
+		
+		if($subfield != "data") {
+			if(! $this->isAllowedSubfield($subfield)) {
+				throw new WireException(sprintf($this->_("Unknown subfield name for datetime field: %s"), $subfield));
+			}
+			$value = $this->sanitizer->int($value);
+			if($operator == "day_of_year") {
+				$value += 1;
+			}
+			$database = $this->wire("database");
+			if($database->isOperator($operator)) {
+				$table = $database->escapeTable($table);
+				$value = $database->escapeStr($value);
+				$formatarg = self::$_operators[$subfield][0];
+				$query->where("DATE_FORMAT({$table}.data, '%{$formatarg}'){$operator}'$value'");
+			}
+		} else {
+			$value = (int) $this->_sanitizeValue($value); 
+			if($value) $value = date('Y-m-d H:i:s', $value); 
+				else $value = '';
+			$database = $this->wire('database');
+			if($database->isOperator($operator)) {
+				$table = $database->escapeTable($table);
+				$subfield = $database->escapeCol($subfield);
+				$value = $database->escapeStr($value);
+				$query->where("$table.{$subfield}{$operator}'$value'");
+			}
+		}
+		return $query; 
+	}
+	
+	/**
+	 * Convert value from Y-m-d H:i:s string to timestamp
+	 *
+	 */
+	public function ___wakeupValue(Page $page, Field $field, $value) {
+		if(!empty($value)) $value = strtotime($value); 
+		if($value === false) $value = '';
+		$dt = new WireDT();
+		$dt->set("value", $value);
+		return $dt; 
+	}
+
+	/**
+	 * Convert value from timestamp to Y-m-d H:i:s date string
+	 *
+	 */
+	public function ___sleepValue(Page $page, Field $field, $value) {
+		if($value instanceof WireDT) $value = $value->get("value");
+		$value = $this->_sanitizeValue($value); 
+		return is_int($value) ? date('Y-m-d H:i:s', $value) : '';
+	}
+
+	/**
+	 * Format the value for output, according to selected format and language
+	 *
+	 */
+	public function ___formatValue(Page $page, Field $field, $value) {
+		if($value instanceof WireDT) $value = $value->get("value");
+		$format = '';
+		if($this->languages && !$this->user->language->isDefault()) $format = $field->get("dateOutputFormat{$this->user->language}"); 
+		if(!$format) $format = $field->dateOutputFormat;
+		return $this->formatDate($value, $format); 
+	}
+
+	public function ___exportValue(Page $page, Field $field, $value, array $options = array()) {
+		if($value instanceof WireDT) $value = $value->get("value");
+		if(!$value) return '';
+		return date('Y-m-d H:i:s', $value); 
+	}
+
+	/**
+	 * Sanitize a value assumed to be either a timestamp or in strtotime() compatible format
+	 *
+	 */
+	protected function _sanitizeValue($value) {
+		if($value instanceof WireDT) return $value;
+		if(empty($value)) return new WireDT();
+		
+		// already a timestamp
+		if(ctype_digit(ltrim($value, '-'))) $value = (int) $value; 
+		else $value = strtotime($value);
+		$dt = new WireDT();
+		$dt->set("value", $value);
+		return $dt;
+	}
+
+	public function __toString() {
+		if($value instanceof WireDT) $value = $value->get("value");
+		return (string)$value;
+	}
+
+	public function isAllowedSubfield($subfield) {
+		return array_key_exists($subfield, self::$_operators);
+	}
+}

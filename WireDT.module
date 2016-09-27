@@ -1,0 +1,39 @@
+<?php
+
+class WireDT extends WireData implements Module {
+	public static function getModuleInfo() {
+		return array(
+			"title"			=>	"Datetime Extensions",
+			"summary"		=>	"Extension to basic datetime fields necessary for advanced selector features",
+			"version"		=>	"0.0.3",
+			"autoload"		=>	true,
+		);
+	}
+
+	// Operators/Format strings, key is the name to us in selectors,
+	// first value is for MySQL, second for PHP's date function
+	protected static $_operators = array(
+		"day"			=>	array("d", "d"),
+		"month"			=>	array("c", "m"),
+		"year"			=>	array("Y", "Y"),
+		"hour"			=>	array("H", "H"),
+		"minutes"		=>	array("i", "i"),
+		"seconds"		=>	array("s", "s"),
+		"day_of_week"	=>	array("w", "w"),
+		"day_of_year"	=>	array("j", "z"),
+		"week_of_year"	=>	array("v", "W")
+	);
+
+	public function get($key) {
+		if($this->isAllowedSubfield($key)) {
+			return date(self::$_operators[$key][1], $this->get("value"));
+		}
+		return parent::get($key);
+	}
+
+	
+	public function isAllowedSubfield($subfield) {
+		return array_key_exists($subfield, self::$_operators);
+	}
+
+}
