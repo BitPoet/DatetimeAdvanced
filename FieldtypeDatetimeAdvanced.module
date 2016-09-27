@@ -44,7 +44,7 @@ class FieldtypeDatetimeAdvanced extends FieldtypeDatetime implements Module {
 		return array(
 			"title"			=>	"Advanced Datetime field",
 			"summary"		=>	"Datetime field with extended search syntax",
-			"version"		=>	"0.0.3",
+			"version"		=>	"0.0.4",
 			"installs"		=>	array("WireDT")
 		);
 	}
@@ -148,19 +148,24 @@ class FieldtypeDatetimeAdvanced extends FieldtypeDatetime implements Module {
 		if(empty($value)) return new WireDT();
 		
 		// already a timestamp
-		if(ctype_digit(ltrim($value, '-'))) $value = (int) $value; 
-		else $value = strtotime($value);
+		if(ctype_digit(ltrim($value, '-'))) {
+			$value = (int) $value; 
+		} else {
+			$value = strtotime($value);
+		}
 		$dt = new WireDT();
 		$dt->set("value", $value);
 		return $dt;
 	}
 
-	public function __toString() {
-		if($value instanceof WireDT) $value = $value->get("value");
-		return (string)$value;
-	}
-
 	public function isAllowedSubfield($subfield) {
 		return array_key_exists($subfield, self::$_operators);
+	}
+
+	public function ___getCompatibleFieldtypes(Field $field) {
+		$fieldtypes = $this->wire(new Fieldtypes());
+		$fieldtypes->add($this->wire('fieldtypes')->get('FieldtypeDate'));
+		$fieldtypes->add($this->wire('fieldtypes')->get('FieldtypeInteger'));
+		return $fieldtypes;
 	}
 }
