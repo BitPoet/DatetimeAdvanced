@@ -44,7 +44,7 @@ class FieldtypeDatetimeAdvanced extends FieldtypeDatetime implements Module {
 		return array(
 			"title"			=>	"Advanced Datetime field",
 			"summary"		=>	"Datetime field with extended search syntax",
-			"version"		=>	"0.0.4",
+			"version"		=>	"0.0.5",
 			"installs"		=>	array("WireDT")
 		);
 	}

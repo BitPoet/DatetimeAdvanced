@@ -5,7 +5,7 @@ class WireDT extends WireData implements Module {
 		return array(
 			"title"			=>	"Datetime Extensions",
 			"summary"		=>	"Extension to basic datetime fields necessary for advanced selector features",
-			"version"		=>	"0.0.4",
+			"version"		=>	"0.0.5",
 			"autoload"		=>	true,
 		);
 	}
