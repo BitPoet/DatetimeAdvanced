@@ -1,4 +1,4 @@
-<?php
+<?php namespace ProcessWire;
 
 /**
  * ## Advanced Datetime Field
@@ -164,8 +164,11 @@ class FieldtypeDatetimeAdvanced extends FieldtypeDatetime implements Module {
 
 	public function ___getCompatibleFieldtypes(Field $field) {
 		$fieldtypes = $this->wire(new Fieldtypes());
-		$fieldtypes->add($this->wire('fieldtypes')->get('FieldtypeDate'));
-		$fieldtypes->add($this->wire('fieldtypes')->get('FieldtypeInteger'));
+		foreach($this->wire('fieldtypes') as $fieldtype) {
+			if($fieldtype instanceof FieldtypeDatetime) {
+				$fieldtypes->add($fieldtype);
+			}
+		}
 		return $fieldtypes;
 	}
 }
