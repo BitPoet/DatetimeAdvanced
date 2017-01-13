@@ -43,8 +43,8 @@ class FieldtypeDatetimeAdvanced extends FieldtypeDatetime implements Module {
 	public static function getModuleInfo() {
 		return array(
 			"title"			=>	"Advanced Datetime field",
-			"summary"		=>	"Datetime field with extended search syntax",
-			"version"		=>	"0.0.5",
+			"summary"		=>	wire()->_("Datetime field with extended search syntax. Needs timezone support enabled in MySQL, see http://dev.mysql.com/doc/refman/5.7/en/time-zone-support.html for details."),
+			"version"		=>	"0.0.6",
 			"installs"		=>	array("WireDT")
 		);
 	}
@@ -160,6 +160,22 @@ class FieldtypeDatetimeAdvanced extends FieldtypeDatetime implements Module {
 
 	public function isAllowedSubfield($subfield) {
 		return array_key_exists($subfield, self::$_operators);
+	}
+
+	/**
+	 * Check for timezone support at installation time.
+	 * If timezone data hasn't been installed for MySQL,
+	 * our operations may return wrong values if system
+	 * and PHP timezones differ, so, in that case, we
+	 * abort installation with an error message.
+	 */
+	public function install() {
+		// The following query returns NULL if timezone tables are missing/empy in MySQL
+		$qry = $this->database->query("SELECT CONVERT_TZ('2012-06-07 12:00:00', 'GMT', 'America/New_York') AS res;");
+		$row = $qry->fetch(PDO::FETCH_ASSOC);
+		if(empty($row["res"])) {
+			throw new WireExpection($this->_x("Timezone data is not installed in MySQL. Read the README for this module and see http://dev.mysql.com/doc/refman/5.7/en/time-zone-support.html for information!"));
+		}
 	}
 
 	public function ___getCompatibleFieldtypes(Field $field) {

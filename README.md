@@ -6,7 +6,7 @@ standard subfield syntax.
 
 ## Status
 
-Alpha. Please provide feedback.
+Beta. Please provide feedback.
 
 ## Possible subfields
 
@@ -24,6 +24,10 @@ Alpha. Please provide feedback.
 WireDT: wrapper class for datetime fields, necessary to support
 subfield syntax when filtering PageArrays. FieldtypeDatetimeAdvanced won't work
 without it.
+
+## Requirements
+
+Requires timezone support to be enabled in MySQL.
 
 ## Usage
 
@@ -76,9 +80,30 @@ in PHP and running queries with plain timestamps will still be the way to go per
 Filling additional fields with just the information you filter on (like month and year) when you
 save a page might then also be a good approach.
 
+### Timezone support
+
+A prerequisite for installing this module is timezone support in MySQL. In most installations,
+MySQL is installed without timezone data, thus not adjusting for possible timezone differences
+between the server and clients. So, if the configured timezone in the server OS and PHP differ,
+the return values of MySQL's date and time functions differ from what PHP expects, rendering
+searches for date or time components unreliable at best and likely plain wrong.
+
+This is not a problem with regular Datetime fields in ProcessWire, since all its values are
+stored in timestamp format and all conversions are done by PHP, conforming to the timezone
+configured there.
+
+To use advanced selectors, though, MySQL needs to be aware of the timezone PHP is using to
+return the correct components, since it stores timestamp values in UTC (GMT).
+
+To enable timezone support, the necessary timezone data nees to be installed and MySQL
+needs to be restarted. On Unix'ish systems, MySQL comes with a tool to generate the
+correct timezone data from data already present in the OS, while other systems may require
+you to download database files or an SQL script. See
+[the MySQL documentation](http://dev.mysql.com/doc/refman/5.7/en/time-zone-support.html) for details.
+
 ### Note
 
-These subfield selectors can unfortunately not be used for the builtin created and modified fields.
+These subfield selectors can unfortunately not be used for the builtin "created" and "modified" fields.
 
 ## License
 
