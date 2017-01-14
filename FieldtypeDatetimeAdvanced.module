@@ -1,4 +1,4 @@
-<?php namespace ProcessWire;
+<?php
 
 /**
  * ## Advanced Datetime Field
@@ -44,8 +44,8 @@ class FieldtypeDatetimeAdvanced extends FieldtypeDatetime implements Module {
 		return array(
 			"title"			=>	"Advanced Datetime field",
 			"summary"		=>	wire()->_("Datetime field with extended search syntax. Needs timezone support enabled in MySQL, see http://dev.mysql.com/doc/refman/5.7/en/time-zone-support.html for details."),
-			"version"		=>	"0.0.6",
-			"installs"		=>	array("WireDT")
+			"version"		=>	"0.0.8",
+			"installs"		=>	array("WireDT", "InputfieldDatetimeAdvanced")
 		);
 	}
 
@@ -153,14 +153,60 @@ class FieldtypeDatetimeAdvanced extends FieldtypeDatetime implements Module {
 		} else {
 			$value = strtotime($value);
 		}
+		/*
 		$dt = new WireDT();
 		$dt->set("value", $value);
 		return $dt;
+		*/
+		return $value;
 	}
 
 	public function isAllowedSubfield($subfield) {
 		return array_key_exists($subfield, self::$_operators);
 	}
+
+	/**
+	 * Given a date/time string and expected format, convert it to a unix timestamp
+	 *
+	 * Note: this method moved to the WireDateTime class and is kept here for backwards compatibility.
+	 * 
+	 * @param string $str Date/time string or WireDT object
+	 * @param string $format Format of the date/time string in PHP date syntax
+	 * @return int
+	 * @deprecated Use WireDateTime class instead
+	 *
+	 */
+	static public function stringToTimestamp($str, $format) {
+		if($str instanceof WireDT) $str = $str->get("value");
+		$wdt = new WireDateTime();
+		return $wdt->stringToTimestamp($str, $format);
+	}
+
+	/**
+	 * Format a date with the given PHP date() or PHP strftime() format
+	 * 
+	 * Note: this method moved to the WireDateTime class and is kept here for backwards compatibility.
+	 *
+ 	 * @param int $value Unix timestamp of date or WireDT object
+	 * @param string $format date() or strftime() format string to use for formatting
+	 * @return string Formatted date string
+	 * @deprecated Use WireDateTime class instead
+	 *
+	 */
+	static public function formatDate($value, $format) {
+		if($str instanceof WireDT) $str = $str->get("value");
+		$wdt = new WireDateTime();
+		return $wdt->formatDate($value, $format);
+	}
+
+
+
+	public function getInputfield(Page $page, Field $field) {
+		$inputfield = $this->modules->get('InputfieldDatetimeAdvanced'); 
+		$inputfield->class = $this->className();
+		return $inputfield; 
+	}
+
 
 	/**
 	 * Check for timezone support at installation time.
@@ -177,7 +223,7 @@ class FieldtypeDatetimeAdvanced extends FieldtypeDatetime implements Module {
 			throw new WireExpection($this->_x("Timezone data is not installed in MySQL. Read the README for this module and see http://dev.mysql.com/doc/refman/5.7/en/time-zone-support.html for information!"));
 		}
 	}
-
+	
 	public function ___getCompatibleFieldtypes(Field $field) {
 		$fieldtypes = $this->wire(new Fieldtypes());
 		foreach($this->wire('fieldtypes') as $fieldtype) {
