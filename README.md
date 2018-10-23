@@ -20,6 +20,9 @@ Beta. Please provide feedback.
 - day_of_year (0..365)
 - week_of_year (1..53)
 
+- date (date formatted as yyyy-mm-dd)
+- time (time formatted as HH:MM:SS)
+
 ## Also installs
 WireDT: wrapper class for datetime fields, necessary to support
 subfield syntax when filtering PageArrays. FieldtypeDatetimeAdvanced won't work
@@ -48,6 +51,14 @@ Simple selector by month:
 ```
 $maypages = $pagelist->filter("mydatefield.month=5");
 ```
+
+Searching for a birthday:
+```
+$birthday = date('Y-m-d');
+$tocelebrate = $pages->find("birthday.date=$birthday");
+foreach($tocelebrate as $person) {
+	echo "Happy birthday {$person->name}!";
+}
 
 All pages with a date in the next 7 days:
 ```

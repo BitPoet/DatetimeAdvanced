@@ -6,7 +6,7 @@ class InputfieldDatetimeAdvanced extends InputfieldDatetime implements Module {
 		return array(
 			"title"			=>	"Advanced Datetime Inputfield",
 			"summary"		=>	wire()->_("Will be installed by Fieldtype Datetime Advanced"),
-			"version"		=>	"0.0.8",
+			"version"		=>	"0.0.9",
 		);
 	}
 

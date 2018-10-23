@@ -17,6 +17,8 @@
  * - day_of_week (0..6, 0 = Sunday)
  * - day_of_year (0..365)
  * - week_of_year (1..53)
+ * - date (just the date part, yyyy-mm-dd)
+ * - time (just the time part, hh:mm:ss)
  *
  * ## Also installs
  * WireDT: wrapper class for datetime fields, necessary to support
@@ -44,7 +46,7 @@ class FieldtypeDatetimeAdvanced extends FieldtypeDatetime implements Module {
 		return array(
 			"title"			=>	"Advanced Datetime field",
 			"summary"		=>	wire()->_("Datetime field with extended search syntax. Needs timezone support enabled in MySQL, see http://dev.mysql.com/doc/refman/5.7/en/time-zone-support.html for details."),
-			"version"		=>	"0.0.8",
+			"version"		=>	"0.0.9",
 			"installs"		=>	array("WireDT", "InputfieldDatetimeAdvanced")
 		);
 	}
@@ -60,7 +62,9 @@ class FieldtypeDatetimeAdvanced extends FieldtypeDatetime implements Module {
 		"seconds"		=>	array("s", "s"),
 		"day_of_week"	=>	array("w", "w"),
 		"day_of_year"	=>	array("j", "z"),
-		"week_of_year"	=>	array("v", "W")
+		"week_of_year"	=>	array("v", "W"),
+		"date"			=>	array("Y-m-d", "Y-m-d"),
+		"time"			=>	array("T", "H:i:s"),
 	);
 
 	/**
@@ -73,7 +77,11 @@ class FieldtypeDatetimeAdvanced extends FieldtypeDatetime implements Module {
 			if(! $this->isAllowedSubfield($subfield)) {
 				throw new WireException(sprintf($this->_("Unknown subfield name for datetime field: %s"), $subfield));
 			}
-			$value = $this->sanitizer->int($value);
+			if($subfield == "date" || $subfield == "time") {
+				$value = preg_replace('/[^0-9:-]/', '', $value);
+			} else {
+				$value = $this->sanitizer->int($value);
+			}
 			if($operator == "day_of_year") {
 				$value += 1;
 			}
@@ -82,7 +90,8 @@ class FieldtypeDatetimeAdvanced extends FieldtypeDatetime implements Module {
 				$table = $database->escapeTable($table);
 				$value = $database->escapeStr($value);
 				$formatarg = self::$_operators[$subfield][0];
-				$query->where("DATE_FORMAT({$table}.data, '%{$formatarg}'){$operator}'$value'");
+				$formatarg = preg_replace('/([a-zA-Z])/', '%$1', $formatarg);
+				$query->where("DATE_FORMAT({$table}.data, '{$formatarg}'){$operator}'$value'");
 			}
 		} else {
 			$value = (int) $this->_sanitizeValue($value); 
@@ -194,7 +203,7 @@ class FieldtypeDatetimeAdvanced extends FieldtypeDatetime implements Module {
 	 *
 	 */
 	static public function formatDate($value, $format) {
-		if($str instanceof WireDT) $str = $str->get("value");
+		if($value instanceof WireDT) $value = $value->get("value");
 		$wdt = new WireDateTime();
 		return $wdt->formatDate($value, $format);
 	}

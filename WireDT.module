@@ -5,7 +5,7 @@ class WireDT extends WireData implements Module {
 		return array(
 			"title"			=>	"Datetime Extensions",
 			"summary"		=>	"Extension to basic datetime fields necessary for advanced selector features",
-			"version"		=>	"0.0.8",
+			"version"		=>	"0.0.9",
 			"autoload"		=>	true,
 		);
 	}
@@ -21,7 +21,9 @@ class WireDT extends WireData implements Module {
 		"seconds"		=>	array("s", "s"),
 		"day_of_week"	=>	array("w", "w"),
 		"day_of_year"	=>	array("j", "z"),
-		"week_of_year"	=>	array("v", "W")
+		"week_of_year"	=>	array("v", "W"),
+		"date"			=>	array("%Y-%m-%d", "Y-m-d"),
+		"time"			=>	array("T", "H:i:s"),
 	);
 
 	public function get($key) {
