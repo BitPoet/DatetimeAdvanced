@@ -59,6 +59,7 @@ $tocelebrate = $pages->find("birthday.date=$birthday");
 foreach($tocelebrate as $person) {
 	echo "Happy birthday {$person->name}!";
 }
+```
 
 All pages with a date in the next 7 days:
 ```
