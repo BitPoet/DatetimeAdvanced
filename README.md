@@ -30,7 +30,7 @@ without it.
 
 ## Requirements
 
-Requires timezone support to be enabled in MySQL.
+Requires [timezone support](http://dev.mysql.com/doc/refman/5.7/en/time-zone-support.html) to be enabled in MySQL.
 
 ## Usage
 
