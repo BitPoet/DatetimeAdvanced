@@ -41,12 +41,12 @@
  * ```
  **/
 
-class FieldtypeDatetimeAdvanced extends FieldtypeDatetime implements Module {
+class FieldtypeDatetimeAdvanced extends FieldtypeDatetime implements Module, ConfigurableModule {
 	public static function getModuleInfo() {
 		return array(
 			"title"			=>	"Advanced Datetime field",
 			"summary"		=>	wire()->_("Datetime field with extended search syntax. Needs timezone support enabled in MySQL, see http://dev.mysql.com/doc/refman/5.7/en/time-zone-support.html for details."),
-			"version"		=>	"0.0.9",
+			"version"		=>	"1.0.0",
 			"installs"		=>	array("WireDT", "InputfieldDatetimeAdvanced")
 		);
 	}
@@ -222,16 +222,17 @@ class FieldtypeDatetimeAdvanced extends FieldtypeDatetime implements Module {
 	 * If timezone data hasn't been installed for MySQL,
 	 * our operations may return wrong values if system
 	 * and PHP timezones differ, so, in that case, we
-	 * abort installation with an error message.
+	 * output an error message.
 	 */
 	public function install() {
 		// The following query returns NULL if timezone tables are missing/empy in MySQL
 		$qry = $this->database->query("SELECT CONVERT_TZ('2012-06-07 12:00:00', 'GMT', 'America/New_York') AS res;");
 		$row = $qry->fetch(PDO::FETCH_ASSOC);
 		if(empty($row["res"])) {
-			throw new WireExpection($this->_x("Timezone data is not installed in MySQL. Read the README for this module and see http://dev.mysql.com/doc/refman/5.7/en/time-zone-support.html for information!"));
+			$this->session->error($this->_x("Timezone data is not installed in MySQL. Read the README for this module and see http://dev.mysql.com/doc/refman/5.7/en/time-zone-support.html for information!"));
 		}
 	}
+	
 	
 	public function ___getCompatibleFieldtypes(Field $field) {
 		$fieldtypes = $this->wire(new Fieldtypes());
@@ -241,5 +242,47 @@ class FieldtypeDatetimeAdvanced extends FieldtypeDatetime implements Module {
 			}
 		}
 		return $fieldtypes;
+	}
+	
+	
+	public function ___getModuleConfigInputfields() {
+		
+		$ifs = new InputfieldWrapper();
+		
+		$cmd = $this->config->dbInitCommand;
+		$off = date('O');
+		$needUpdate = false;
+		if(strlen($off) > 0) {
+			if(preg_match('/time_zone/i', $cmd)) {
+				$needUpdate = false;
+				return $ifs;
+			}
+			// PHP returns +0200, MySQL wants +02:00
+			$off = preg_replace('/(\d\d)$/', ':$1', $off);
+			// Append timezone set statement
+			$cmd .= sprintf(", time_zone = '%s' ", $off);
+		}
+		
+		$f = $this->modules->get("InputfieldMarkup");
+		$f->label = $this->_("Enable timezone support in MySQL");
+		$f->description = $this->_("For datetime advanced database selectors to be reliable, PHP and MySQL need to add/subtract the same offsets for datetime and timestamp values.") .
+			" " .
+			$this->_("To accomplish that, the timezone setting in MySQL needs to be set to the same value as in PHP.") .
+			" " .
+			$this->_("Copy the following line to site/config.php:")
+		;
+
+		$f->attr(
+			'value',
+			"<code>" .
+			"\$config->dbInitCommand = \"$cmd\";" .
+			"</code>"
+		);
+		$f->notes = $this->_("Important: timezone data must be loaded in MySQL! See [this link](http://dev.mysql.com/doc/refman/5.7/en/time-zone-support.html) for details.");
+		
+		$ifs->append($f);
+		
+		return $ifs;
+		
 	}
 }
