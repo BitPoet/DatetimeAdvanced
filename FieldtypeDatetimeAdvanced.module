@@ -46,7 +46,7 @@ class FieldtypeDatetimeAdvanced extends FieldtypeDatetime implements Module, Con
 		return array(
 			"title"			=>	"Advanced Datetime field",
 			"summary"		=>	wire()->_("Datetime field with extended search syntax. Needs timezone support enabled in MySQL, see http://dev.mysql.com/doc/refman/5.7/en/time-zone-support.html for details."),
-			"version"		=>	"1.0.0",
+			"version"		=>	"1.0.1",
 			"installs"		=>	array("WireDT", "InputfieldDatetimeAdvanced")
 		);
 	}
@@ -229,7 +229,7 @@ class FieldtypeDatetimeAdvanced extends FieldtypeDatetime implements Module, Con
 		$qry = $this->database->query("SELECT CONVERT_TZ('2012-06-07 12:00:00', 'GMT', 'America/New_York') AS res;");
 		$row = $qry->fetch(PDO::FETCH_ASSOC);
 		if(empty($row["res"])) {
-			$this->session->error($this->_x("Timezone data is not installed in MySQL. Read the README for this module and see http://dev.mysql.com/doc/refman/5.7/en/time-zone-support.html for information!"));
+			$this->session->error($this->_("Timezone data is not installed in MySQL. Read the README for this module and see http://dev.mysql.com/doc/refman/5.7/en/time-zone-support.html for information!"));
 		}
 	}
 	
