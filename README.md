@@ -99,9 +99,9 @@ array(
 	"hour"			=>	array("H", "H"),
 	"minutes"		=>	array("i", "i"),
 	"seconds"		=>	array("s", "s"),
-	"day_of_week"	=>	array("w", "w"),
-	"day_of_year"	=>	array("j", "z"),
-	"week_of_year"	=>	array("v", "W"),
+	"day_of_week"		=>	array("w", "w"),
+	"day_of_year"		=>	array("j", "z"),
+	"week_of_year"		=>	array("v", "W"),
 	"date"			=>	array("%Y-%m-%d", "Y-m-d"),
 	"time"			=>	array("T", "H:i:s"),
 );
