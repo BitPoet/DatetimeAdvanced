@@ -46,26 +46,21 @@ class FieldtypeDatetimeAdvanced extends FieldtypeDatetime implements Module, Con
 		return array(
 			"title"			=>	"Advanced Datetime field",
 			"summary"		=>	wire()->_("Datetime field with extended search syntax. Needs timezone support enabled in MySQL, see http://dev.mysql.com/doc/refman/5.7/en/time-zone-support.html for details."),
-			"version"		=>	"1.0.1",
+			"version"		=>	"1.0.3",
 			"installs"		=>	array("WireDT", "InputfieldDatetimeAdvanced")
 		);
 	}
 
-	// Operators/Format strings, key is the name to us in selectors,
-	// first value is for MySQL, second for PHP's date function
-	protected static $_operators = array(
-		"day"			=>	array("d", "d"),
-		"month"			=>	array("c", "m"),
-		"year"			=>	array("Y", "Y"),
-		"hour"			=>	array("H", "H"),
-		"minutes"		=>	array("i", "i"),
-		"seconds"		=>	array("s", "s"),
-		"day_of_week"	=>	array("w", "w"),
-		"day_of_year"	=>	array("j", "z"),
-		"week_of_year"	=>	array("v", "W"),
-		"date"			=>	array("Y-m-d", "Y-m-d"),
-		"time"			=>	array("T", "H:i:s"),
-	);
+	/* REPLACED with non-static WireDT::[getOperators|getOperator|hasOperator](...)
+	protected static $_operators;
+	*/
+	
+	protected $_dtObj;
+
+	public function init() {
+		$this->_dtObj = new WireDT();
+		parent::init();
+	}
 
 	/**
 	 * Match a date/time value in the database, as used by PageFinder
@@ -89,7 +84,8 @@ class FieldtypeDatetimeAdvanced extends FieldtypeDatetime implements Module, Con
 			if($database->isOperator($operator)) {
 				$table = $database->escapeTable($table);
 				$value = $database->escapeStr($value);
-				$formatarg = self::$_operators[$subfield][0];
+				//$formatarg = self::$_operators[$subfield][0];
+				$formatarg = $this->_dtObj->getOperator($subfield, "SQL");
 				$formatarg = preg_replace('/([a-zA-Z])/', '%$1', $formatarg);
 				$query->where("DATE_FORMAT({$table}.data, '{$formatarg}'){$operator}'$value'");
 			}
@@ -171,7 +167,7 @@ class FieldtypeDatetimeAdvanced extends FieldtypeDatetime implements Module, Con
 	}
 
 	public function isAllowedSubfield($subfield) {
-		return array_key_exists($subfield, self::$_operators);
+		return $this->_dtObj->hasOperator($subfield);
 	}
 
 	/**
@@ -216,6 +212,37 @@ class FieldtypeDatetimeAdvanced extends FieldtypeDatetime implements Module, Con
 		return $inputfield; 
 	}
 
+
+	/**
+	 * Return array with information about what properties and operators can be used with this field.
+	 * 
+	 * #pw-group-finding
+	 * 
+	 * @param Field $field
+	 * @param array $data Array of extra data, when/if needed
+	 * @return array See `FieldSelectorInfo` class for details.
+	 *
+	 */
+	public function ___getSelectorInfo(Field $field, array $data = array()) {
+		if($data) {}
+		$selectorInfo = $this->wire(new FieldSelectorInfo());
+		$info = $selectorInfo->getSelectorInfo($field);
+		
+		$ops = $this->_dtObj->getOperators();
+
+		foreach(array_keys($ops) as $op) {
+			$info["subfields"][$op] = array(
+				"name"	=> $op,
+				"label" => $op,
+				"operators" => $info["operators"],
+				"input" => "text",
+				"hint" => "",
+				"options" => array()
+			);
+		}
+		
+		return $info;
+	}
 
 	/**
 	 * Check for timezone support at installation time.

@@ -5,14 +5,14 @@ class WireDT extends WireData implements Module {
 		return array(
 			"title"			=>	"Datetime Extensions",
 			"summary"		=>	"Extension to basic datetime fields necessary for advanced selector features",
-			"version"		=>	"1.0.0",
+			"version"		=>	"1.0.3",
 			"autoload"		=>	true,
 		);
 	}
 
 	// Operators/Format strings, key is the name to us in selectors,
 	// first value is for MySQL, second for PHP's date function
-	protected static $_operators = array(
+	protected  $_operators = array(
 		"day"			=>	array("d", "d"),
 		"month"			=>	array("c", "m"),
 		"year"			=>	array("Y", "Y"),
@@ -26,9 +26,31 @@ class WireDT extends WireData implements Module {
 		"time"			=>	array("T", "H:i:s"),
 	);
 
+	public function ___getOperators() {
+		return $this->_operators;
+	}
+	
+	/**
+	 * Return the format string for the given operator.
+	 *
+	 * @param $key String Name of the operator
+	 * @param $target String either "SQL" or "PHP"
+	 * @return String
+	 */
+	public function getOperator($key, $target) {
+		$ops = $this->getOperators();
+		return $ops[$key][$target == 'SQL' ? 0 : 1];
+	}
+
+	public function hasOperator($key) {
+		$ops = $this->getOperators();
+		return array_key_exists($key, $ops);
+	}
+
 	public function get($key) {
 		if($this->isAllowedSubfield($key)) {
-			return date(self::$_operators[$key][1], $this->get("value"));
+			$ops = $this->getOperators();
+			return date($ops[$key][1], $this->get("value"));
 		}
 		return parent::get($key);
 	}
@@ -49,7 +71,7 @@ class WireDT extends WireData implements Module {
 	}
 	
 	public function isAllowedSubfield($subfield) {
-		return array_key_exists($subfield, self::$_operators);
+		return $this->hasOperator($subfield);
 	}
 
 }

@@ -4,6 +4,8 @@ Replacement for FieldtypeDatetime with support for subfield selectors like year,
 Allows searching for individual components of datetime fields in
 standard subfield syntax.
 
+Also supports subfields in Lister (and probably Lister Pro, though confirmation would be appreciated).
+
 ## Status
 
 Beta. Please provide feedback.
@@ -78,6 +80,44 @@ strftime() and date() shorthand:
 ```
 echo $blogentry->publishdate->strftime("%Y-%m-%d %H:%M:%S") . PHP_EOL;
 echo $blogentry->publishdate->date("Y-m-d H:i:s") . PHP_EOL;
+```
+
+## Adding your own custom "subfields"
+
+You can add your own custom subfields with formats through a hook after WireDT::getOperators.
+Note, however, that the hook has to be done very early, so site/ready.php is too late. Use
+site/init.php instead.
+
+The method returns an associative array in the form:
+```php
+
+array(
+	"subfield"		=> array("SQL-Format", "PHP-Format"),
+	"day"			=>	array("d", "d"),
+	"month"			=>	array("c", "m"),
+	"year"			=>	array("Y", "Y"),
+	"hour"			=>	array("H", "H"),
+	"minutes"		=>	array("i", "i"),
+	"seconds"		=>	array("s", "s"),
+	"day_of_week"	=>	array("w", "w"),
+	"day_of_year"	=>	array("j", "z"),
+	"week_of_year"	=>	array("v", "W"),
+	"date"			=>	array("%Y-%m-%d", "Y-m-d"),
+	"time"			=>	array("T", "H:i:s"),
+);
+
+```
+
+You can specify your own format, e.g. a combination of year and month that we call "ym" for
+obvious reasons:
+
+```php
+
+wire()->addHookAfter("WireDT::getOperators", function(HookEvent $event) {
+	$ops = $event->return;
+	$ops["ym"] = array("Ym", "Ym");	// Formats for SQL and PHP are the same
+	$event->return = $ops;
+});
 ```
 
 ## A little bit of prose
