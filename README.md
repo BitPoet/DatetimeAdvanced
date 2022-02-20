@@ -6,9 +6,11 @@ standard subfield syntax.
 
 Also supports subfields in Lister (and probably Lister Pro, though confirmation would be appreciated).
 
-## Status
+# Status
 
-Beta. Please provide feedback.
+**ATTENTION: THIS MODULES IS NO LONGER COMPATIBLE WITH LATEST VERSIONS OF PROCESSWIRE 3!**
+
+Unfortunately, it will take until the end of the year until I can take care of the necessary changes.
 
 ## Possible subfields
 
